@@ -177,6 +177,31 @@ public class DoodleView extends View {
         return true;
     }
 
+    public void interruptDraw() {
+        // Fixes an issue where opening the drawer prevents an ACTION_UP event,
+        // so after closing the drawer, the last draw could not be undone
+
+        // If the drawer state change doesn't affect a drawn path, no big deal
+        if (_path == null || _path.isEmpty()) return;
+
+        // Add the new drawing to the undoable Bitmap cache: this is now the one we draw
+        _bgUndo.add(getDrawingCache().copy(Bitmap.Config.ARGB_8888, true));
+
+        // Only remember 15, to keep size cost down
+        // Plus, if you realize you messed up a whole 15 lines later, shame on you
+        if (_bgUndo.size() > 15) _bgUndo.remove(0);
+
+        // Destroy drawing cache to balance out the get call
+        // That's just how it works
+        destroyDrawingCache();
+
+        // Draw the new stuff / Make it official
+        drawBackground();
+        invalidate();
+
+        _path = new Path();
+    }
+
     private void makeDot(float xpos, float ypos) {
         // Draw a line that's 1 pixel long. So basically a dot.
         // I make sure that I draw towards the center, just for the highly unlikely corner cases

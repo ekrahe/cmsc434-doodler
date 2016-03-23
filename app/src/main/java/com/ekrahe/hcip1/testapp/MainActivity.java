@@ -48,8 +48,17 @@ public class MainActivity extends AppCompatActivity
         @Override
         public void onDrawerStateChanged(int newState) {
             super.onDrawerStateChanged(newState);
+
+            // If the clear button was pressed once (needs to be pressed again to confirm),
+            // opening the drawer cancels the action
             if(_clearFlag) _clearFlag = false;
+
+            // Fixes issue where tapping on the left side of _doodle draws a dot and then opens the drawer
+            // Before fix, no ACTION_UP would be issued, so if the dot was the last drawn Path,
+            // it could not be undone
+            _doodle.interruptDraw();
         }
+
     }
 
     @Override
@@ -60,6 +69,9 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        _doodle = (DoodleView) findViewById(R.id.doodle);
+        _doodle.setOnTouchListener(this);
+
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         forgetClearABDT toggle = new forgetClearABDT(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
@@ -68,9 +80,6 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
-
-        _doodle = (DoodleView) findViewById(R.id.doodle);
-        _doodle.setOnTouchListener(this);
 
         // Create the directory for saved images
         if(!_imageRoot.exists()) _imageRoot.mkdirs();
